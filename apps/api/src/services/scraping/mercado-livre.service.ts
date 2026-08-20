@@ -6,6 +6,7 @@ import {
   BLOCK_PAGE_MARKERS,
   MOTO_KEYWORD_FILTER,
   attrOf,
+  chunk,
   computeDiscountPercent,
   dedupeByExternalId,
   delay,
@@ -18,6 +19,7 @@ import {
   parsePrice,
   parseProxyUrl,
   randomUserAgent,
+  shuffle,
   textOf,
   type ScrapedOffer,
 } from "./shared.js";
@@ -51,12 +53,32 @@ export async function getPromotionsFromMercadoLivre(): Promise<ScrapedOffer[]> {
     ...(proxy ? { proxy } : {}),
   });
   const results: ScrapedOffer[] = [];
+  const state = { blocked: false };
 
   try {
-    const queue = [...config.scraper.keywords];
-    const workerCount = Math.min(config.scraper.concurrency, queue.length || 1);
-    const workers = Array.from({ length: workerCount }, () => runWorker(browser, queue, results));
-    await Promise.all(workers);
+    const batches = chunk(shuffle(config.scraper.keywords), config.scraper.batchSize);
+
+    for (const [index, batch] of batches.entries()) {
+      const queue = [...batch];
+      const workerCount = Math.min(config.scraper.concurrency, queue.length || 1);
+      const workers = Array.from({ length: workerCount }, () => runWorker(browser, queue, results, state));
+      await Promise.all(workers);
+
+      if (state.blocked) break;
+
+      const isLastBatch = index === batches.length - 1;
+      if (!isLastBatch) {
+        console.log(`⏸️  Lote ${index + 1}/${batches.length} concluído, pausando antes do próximo.`);
+        await delay(jitter(config.scraper.batchDelayMs));
+      }
+    }
+
+    if (state.blocked) {
+      console.warn(
+        `⚠️  Execução interrompida após bloqueio do Mercado Livre — pausando por ${config.scraper.blockCooldownMs / 1000}s antes de encerrar esta rodada.`,
+      );
+      await delay(config.scraper.blockCooldownMs);
+    }
   } finally {
     await browser.close();
   }
@@ -64,23 +86,24 @@ export async function getPromotionsFromMercadoLivre(): Promise<ScrapedOffer[]> {
   return dedupeByExternalId(results);
 }
 
-async function runWorker(browser: Browser, queue: string[], results: ScrapedOffer[]): Promise<void> {
-  while (queue.length > 0) {
+async function runWorker(browser: Browser, queue: string[], results: ScrapedOffer[], state: { blocked: boolean }): Promise<void> {
+  while (queue.length > 0 && !state.blocked) {
     const keyword = queue.shift();
     if (!keyword) return;
 
     try {
-      const items = await scrapeKeyword(browser, keyword);
-      results.push(...items);
+      const { offers, blocked } = await scrapeKeyword(browser, keyword);
+      results.push(...offers);
+      if (blocked) state.blocked = true;
     } catch (error) {
       console.error(`❌ Falha ao raspar palavra-chave "${keyword}":`, error);
     }
 
-    await delay(jitter(config.scraper.navDelayMs));
+    if (!state.blocked) await delay(jitter(config.scraper.navDelayMs));
   }
 }
 
-async function scrapeKeyword(browser: Browser, keyword: string): Promise<ScrapedOffer[]> {
+async function scrapeKeyword(browser: Browser, keyword: string): Promise<{ offers: ScrapedOffer[]; blocked: boolean }> {
   const page = await browser.newPage({ userAgent: randomUserAgent() });
   page.setDefaultTimeout(config.scraper.pageTimeoutMs);
 
@@ -97,17 +120,23 @@ async function scrapeKeyword(browser: Browser, keyword: string): Promise<Scraped
 
   try {
     const searchUrl = `https://lista.mercadolivre.com.br/${encodeURIComponent(keyword)}_Deals_true`;
-    await gotoWithRetry(page, searchUrl);
+    const response = await gotoWithRetry(page, searchUrl);
+
+    const status = response?.status();
+    if (status === 429 || status === 403) {
+      console.warn(`⚠️  HTTP ${status} ao raspar "${keyword}", provável bloqueio — pulando.`);
+      return { offers: [], blocked: true };
+    }
 
     if (/\/gz\/account-verification|\/security\/suspicious_traffic/.test(page.url())) {
       console.warn(`⚠️  Bloqueio de tráfego suspeito detectado ao raspar "${keyword}", pulando.`);
-      return [];
+      return { offers: [], blocked: true };
     }
 
     const bodyText = (await page.textContent("body").catch(() => null))?.toLowerCase() ?? "";
     if (BLOCK_PAGE_MARKERS.some((marker) => bodyText.includes(marker))) {
       console.warn(`⚠️  Possível bloqueio detectado ao raspar "${keyword}", pulando.`);
-      return [];
+      return { offers: [], blocked: true };
     }
 
     await page.waitForSelector(CARD_SELECTOR, { timeout: config.scraper.pageTimeoutMs }).catch(() => null);
@@ -126,7 +155,7 @@ async function scrapeKeyword(browser: Browser, keyword: string): Promise<Scraped
       }
     }
 
-    return offers;
+    return { offers, blocked: false };
   } finally {
     await page.close();
   }

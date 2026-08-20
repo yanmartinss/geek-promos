@@ -118,6 +118,25 @@ export function jitter(ms: number): number {
   return Math.round(ms - variance + Math.random() * variance * 2);
 }
 
+/** Fisher-Yates shuffle so keyword order isn't identical (and as easily fingerprinted) every run. */
+export function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j]!, result[i]!];
+  }
+  return result;
+}
+
+/** Splits items into fixed-size batches, so keywords can be scraped in short bursts instead of one long run. */
+export function chunk<T>(items: T[], size: number): T[][] {
+  const batches: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    batches.push(items.slice(i, i + size));
+  }
+  return batches;
+}
+
 export interface ProxyConfig {
   server: string;
   username?: string;
@@ -138,15 +157,15 @@ export function parseProxyUrl(proxyUrl: string | null): ProxyConfig | null {
   };
 }
 
-export async function gotoWithRetry(page: Page, url: string, attempts = 2): Promise<void> {
+export async function gotoWithRetry(page: Page, url: string, attempts = 2): Promise<import("playwright").Response | null> {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      await page.goto(url, { waitUntil: "domcontentloaded" });
-      return;
+      return await page.goto(url, { waitUntil: "domcontentloaded" });
     } catch (error) {
       if (attempt === attempts) throw error;
       console.warn(`⚠️  Falha ao navegar para "${url}" (tentativa ${attempt}/${attempts}), tentando novamente...`);
       await delay(jitter(config.scraper.navDelayMs));
     }
   }
+  return null;
 }
