@@ -1,0 +1,13 @@
+FROM mcr.microsoft.com/playwright:v1.49.0-jammy
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && apt-get install -y nodejs
+RUN corepack enable
+WORKDIR /app
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
+COPY apps/ apps/
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter api exec playwright install chromium
+RUN pnpm --filter api exec prisma generate
+
+CMD ["sh", "-c", "pnpm --filter api exec prisma migrate dev && pnpm --filter api dev"]

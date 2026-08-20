@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Store {
+  SHOPEE
+  MERCADO_LIVRE
+  AMAZON
+}
+
+enum Platform {
+  TELEGRAM
+  WHATSAPP
+}
+
+model Product {
+  id               String   @id @default(uuid())
+  externalId       String
+  store            Store
+  title            String
+  originalPrice    Decimal  @db.Decimal(10, 2)
+  promotionalPrice Decimal  @db.Decimal(10, 2)
+  discountPercent  Decimal  @db.Decimal(5, 2)
+  imageUrl         String?
+  affiliateUrl     String
+  coupon           String?
+  paymentMethod    String?
+  isInternational  Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  sentOffers SentOffer[]
+
+  @@unique([store, externalId])
+  @@map("products")
+}
+
+model SentOffer {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  platform  Platform
+  channelId String
+  sentAt    DateTime @default(now())
+
+  @@index([productId, platform, sentAt])
+  @@map("sent_offers")
+}
