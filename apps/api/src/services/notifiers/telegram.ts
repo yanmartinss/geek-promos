@@ -1,7 +1,7 @@
 import { Telegraf } from "telegraf";
 
 import { config } from "../../config.js";
-import { formatTelegramCaption } from "./format.js";
+import { formatTelegramCaption, needsLinkButton } from "./format.js";
 import type { Notifier, Offer } from "./types.js";
 
 const bot = new Telegraf(config.telegram.botToken);
@@ -18,9 +18,9 @@ export class TelegramNotifier implements Notifier {
 
     await bot.telegram.sendPhoto(this.channelId, offer.imageUrl, {
       caption: formatTelegramCaption(offer),
-      reply_markup: {
-        inline_keyboard: [[{ text: "🔗 Ver oferta", url: offer.affiliateUrl }]],
-      },
+      ...(needsLinkButton(offer)
+        ? { reply_markup: { inline_keyboard: [[{ text: "🔗 Ver oferta", url: offer.affiliateUrl }]] } }
+        : {}),
     });
   }
 }

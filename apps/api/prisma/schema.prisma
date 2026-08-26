@@ -16,7 +16,6 @@ enum Store {
 enum Platform {
   TELEGRAM
   WHATSAPP
-  TWITTER
 }
 
 model Product {

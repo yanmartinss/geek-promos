@@ -9,17 +9,6 @@ const envSchema = z.object({
   EVOLUTION_API_KEY: z.string().optional(),
   EVOLUTION_INSTANCE: z.string().optional(),
   EVOLUTION_WHATSAPP_ID: z.string().optional(),
-  TWITTER_API_KEY: z.string().optional(),
-  TWITTER_API_SECRET: z.string().optional(),
-  TWITTER_ACCESS_TOKEN: z.string().optional(),
-  TWITTER_ACCESS_SECRET: z.string().optional(),
-  TELEGRAM_GROUP_URL: z.string().optional(),
-  TWITTER_MIN_DISCOUNT_PERCENT: z.coerce.number().nonnegative().default(40),
-  TWITTER_HIGH_INTEREST_KEYWORDS: z
-    .string()
-    .default("box|luxo|edição especial|capa dura premium|colecionador"),
-  TWITTER_DAILY_LIMIT: z.coerce.number().int().positive().default(15),
-  TWITTER_MIN_INTERVAL_MINUTES: z.coerce.number().int().positive().default(30),
   OFFER_DEDUP_DAYS: z.coerce.number().int().positive().default(7),
   MIN_DISCOUNT_PERCENT: z.coerce.number().nonnegative().default(20),
   SEARCH_KEYWORDS: z
@@ -33,6 +22,7 @@ const envSchema = z.object({
       "livro|graphic novel|colecionável|colecionavel|jogo de tabuleiro|board game",
     ),
   SCRAPER_MAX_ITEMS_PER_KEYWORD: z.coerce.number().int().positive().default(20),
+  SCRAPER_MAX_ITEMS_PER_KEYWORD_ML: z.coerce.number().int().positive().default(12),
   SCRAPER_PAGE_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
   SCRAPER_NAV_DELAY_MS: z.coerce.number().int().positive().default(2000),
   SCRAPER_CONCURRENCY: z.coerce.number().int().positive().default(1),
@@ -68,7 +58,6 @@ const env = parsed.data;
 
 const evolution = resolveEvolutionConfig();
 const amazon = resolveAmazonConfig();
-const twitter = resolveTwitterConfig();
 
 export const config = {
   port: env.PORT,
@@ -77,7 +66,6 @@ export const config = {
     chatId: env.TELEGRAM_CHAT_ID,
   },
   evolution,
-  twitter,
   offer: {
     dedupDays: env.OFFER_DEDUP_DAYS,
     minDiscountPercent: env.MIN_DISCOUNT_PERCENT,
@@ -88,6 +76,7 @@ export const config = {
       .filter(Boolean),
     titleKeywordFilter: new RegExp(env.TITLE_KEYWORD_FILTER, "i"),
     maxItemsPerKeyword: env.SCRAPER_MAX_ITEMS_PER_KEYWORD,
+    maxItemsPerKeywordMercadoLivre: env.SCRAPER_MAX_ITEMS_PER_KEYWORD_ML,
     pageTimeoutMs: env.SCRAPER_PAGE_TIMEOUT_MS,
     navDelayMs: env.SCRAPER_NAV_DELAY_MS,
     concurrency: env.SCRAPER_CONCURRENCY,
@@ -121,33 +110,6 @@ function resolveEvolutionConfig() {
   }
 
   return { url, apiKey, instance, whatsappId };
-}
-
-function resolveTwitterConfig() {
-  const appKey = env.TWITTER_API_KEY;
-  const appSecret = env.TWITTER_API_SECRET;
-  const accessToken = env.TWITTER_ACCESS_TOKEN;
-  const accessSecret = env.TWITTER_ACCESS_SECRET;
-  const telegramGroupUrl = env.TELEGRAM_GROUP_URL;
-
-  if (!appKey || !appSecret || !accessToken || !accessSecret || !telegramGroupUrl) {
-    console.warn(
-      "⚠️  X (Twitter) não configurado — postagem no X desabilitada",
-    );
-    return null;
-  }
-
-  return {
-    appKey,
-    appSecret,
-    accessToken,
-    accessSecret,
-    telegramGroupUrl,
-    minDiscountPercent: env.TWITTER_MIN_DISCOUNT_PERCENT,
-    highInterestFilter: new RegExp(env.TWITTER_HIGH_INTEREST_KEYWORDS, "i"),
-    dailyLimit: env.TWITTER_DAILY_LIMIT,
-    minIntervalMinutes: env.TWITTER_MIN_INTERVAL_MINUTES,
-  };
 }
 
 function resolveAmazonConfig() {

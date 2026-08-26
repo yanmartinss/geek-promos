@@ -35,7 +35,7 @@ async function searchKeyword(keyword: string): Promise<ScrapedOffer[]> {
   const data = await fetchSearch(keyword);
 
   const offers: ScrapedOffer[] = [];
-  for (const item of data.results.slice(0, config.scraper.maxItemsPerKeyword)) {
+  for (const item of data.results.slice(0, config.scraper.maxItemsPerKeywordMercadoLivre)) {
     const offer = await toScrapedOffer(item);
     if (offer) offers.push(offer);
   }
@@ -45,7 +45,7 @@ async function searchKeyword(keyword: string): Promise<ScrapedOffer[]> {
 async function fetchSearch(keyword: string, isRetry = false): Promise<MlSearchResponse> {
   const url = new URL(`https://api.mercadolibre.com/sites/${config.mercadoLivreApi.siteId}/search`);
   url.searchParams.set("q", keyword);
-  url.searchParams.set("limit", String(config.scraper.maxItemsPerKeyword));
+  url.searchParams.set("limit", String(config.scraper.maxItemsPerKeywordMercadoLivre));
 
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${getAccessToken()}` },

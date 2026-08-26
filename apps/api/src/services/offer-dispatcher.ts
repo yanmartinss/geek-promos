@@ -4,10 +4,6 @@ import { isOfferAlreadySent, recordSentOffer } from "./offers/offer-repository.j
 
 export async function dispatchOffer(offer: Offer): Promise<void> {
   for (const notifier of createNotifiers()) {
-    if (notifier.shouldSend && !(await notifier.shouldSend(offer))) {
-      continue;
-    }
-
     const alreadySent = await isOfferAlreadySent(
       offer.externalId,
       offer.store,

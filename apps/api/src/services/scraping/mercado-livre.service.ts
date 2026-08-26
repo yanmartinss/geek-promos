@@ -143,7 +143,7 @@ async function scrapeKeyword(browser: Browser, keyword: string): Promise<{ offer
     const cardHandles = await page.$$(CARD_SELECTOR);
     const offers: ScrapedOffer[] = [];
 
-    for (const card of cardHandles.slice(0, config.scraper.maxItemsPerKeyword)) {
+    for (const card of cardHandles.slice(0, config.scraper.maxItemsPerKeywordMercadoLivre)) {
       const offer = await extractOfferFromCard(card).catch((error: unknown) => {
         console.warn("⚠️  Card ignorado por erro de extração:", error);
         return null;

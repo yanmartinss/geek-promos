@@ -8,6 +8,8 @@ COPY apps/ apps/
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter api exec playwright install chromium
+
+ENV DATABASE_URL=postgresql://user:password@localhost:5432/db
 RUN pnpm --filter api exec prisma generate
 
 CMD ["sh", "-c", "pnpm --filter api exec prisma migrate dev && pnpm --filter api dev"]

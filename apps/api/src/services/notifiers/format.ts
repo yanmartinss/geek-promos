@@ -36,40 +36,23 @@ function buildCaption(offer: Offer, { includeLink }: { includeLink: boolean }): 
   return lines.join("\n");
 }
 
-/** Link de afiliado do ML pode passar de 1KB por causa do tracking — vai num botão, não na legenda, pra não estourar o limite de caption do Telegram. */
+/** Bem abaixo do limite de 1024 da legenda do Telegram, sobrando espaço pro título/preço/cupom. */
+const MAX_INLINE_LINK_LENGTH = 300;
+
+function hasShortAffiliateLink(offer: Offer): boolean {
+  return offer.affiliateUrl.length <= MAX_INLINE_LINK_LENGTH;
+}
+
+/** Link de afiliado do ML pode passar de 1KB por causa do tracking — nesse caso vai num botão em vez da legenda, pra não estourar o limite do Telegram. */
 export function formatTelegramCaption(offer: Offer): string {
-  return buildCaption(offer, { includeLink: false });
+  return buildCaption(offer, { includeLink: hasShortAffiliateLink(offer) });
+}
+
+/** Quando o link não coube na legenda (ver hasShortAffiliateLink), o notifier precisa oferecer um botão. */
+export function needsLinkButton(offer: Offer): boolean {
+  return !hasShortAffiliateLink(offer);
 }
 
 export function formatWhatsAppCaption(offer: Offer): string {
   return buildCaption(offer, { includeLink: true });
-}
-
-const TWEET_MAX_LENGTH = 280;
-/** X encurta qualquer URL pra t.co, sempre 23 chars, não importa o tamanho real do link. */
-const TWEET_URL_LENGTH = 23;
-
-function truncateTitle(title: string, maxLength: number): string {
-  if (title.length <= maxLength) return title;
-  return `${title.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
-}
-
-/** Texto do tuíte: título + preço + link de afiliado + CTA fixo pro grupo do Telegram. */
-export function formatTwitterText(offer: Offer, telegramGroupUrl: string): string {
-  const priceLine = formatPriceLine(offer);
-  const linkLine = `🔗 ${offer.affiliateUrl}`;
-  const ctaPrefix = "👉 Mais ofertas no Telegram: ";
-  const ctaLine = `${ctaPrefix}${telegramGroupUrl}`;
-
-  // URLs contam como TWEET_URL_LENGTH chars fixos no tuíte, não o tamanho real do link.
-  const linkLineEffectiveLength = "🔗 ".length + TWEET_URL_LENGTH;
-  const ctaLineEffectiveLength = ctaPrefix.length + TWEET_URL_LENGTH;
-  const separatorsLength = "\n\n".length * 3;
-
-  const fixedLength =
-    priceLine.length + linkLineEffectiveLength + ctaLineEffectiveLength + separatorsLength;
-  const titleBudget = Math.max(20, TWEET_MAX_LENGTH - fixedLength);
-  const title = truncateTitle(offer.title, titleBudget);
-
-  return [title, priceLine, linkLine, ctaLine].join("\n\n");
 }

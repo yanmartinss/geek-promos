@@ -31,18 +31,3 @@ export async function recordSentOffer(
     data: { productId, platform, channelId },
   });
 }
-
-export async function countSentSince(platform: Platform, since: Date): Promise<number> {
-  return prisma.sentOffer.count({
-    where: { platform, sentAt: { gte: since } },
-  });
-}
-
-export async function getLastSentAt(platform: Platform): Promise<Date | null> {
-  const last = await prisma.sentOffer.findFirst({
-    where: { platform },
-    orderBy: { sentAt: "desc" },
-  });
-
-  return last?.sentAt ?? null;
-}

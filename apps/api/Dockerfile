@@ -7,6 +7,8 @@ COPY apps/ apps/
 
 RUN pnpm install --frozen-lockfile
 
+
+ENV DATABASE_URL=postgresql://user:password@localhost:5432/db
 RUN pnpm --filter api exec prisma generate
 RUN pnpm --filter api build
 
