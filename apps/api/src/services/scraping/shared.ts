@@ -34,8 +34,6 @@ export function randomUserAgent(): string {
   return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)]!;
 }
 
-export const MOTO_KEYWORD_FILTER = /moto|motocicl|capacete|piloto|motoqueiro/i;
-
 export const BLOCK_PAGE_MARKERS = [
   "verificação de segurança",
   "captcha",

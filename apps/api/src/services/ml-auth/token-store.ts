@@ -3,7 +3,7 @@ import path from "node:path";
 import { refreshTokens, type MlTokenResponse } from "./oauth.js";
 import { upsertEnvFile } from "./env-file.js";
 
-const ENV_PATH = path.resolve(process.cwd(), ".env");
+const ENV_PATH = path.resolve(import.meta.dirname, "../../../../../.env");
 
 let accessToken = process.env.ML_ACCESS_TOKEN ?? "";
 let refreshToken = process.env.ML_REFRESH_TOKEN ?? "";

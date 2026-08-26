@@ -1,14 +1,14 @@
 services:
   postgres:
     image: postgres:17
-    container_name: moto-promos-postgres
+    container_name: geek-promos-postgres
 
     restart: unless-stopped
 
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
-      POSTGRES_DB: ${POSTGRES_DB:-moto_promos}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-geek_promos}
 
     ports:
       # Exposto apenas para dev local (migrate/studio fora do container).
@@ -19,7 +19,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-moto_promos}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-geek_promos}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,14 +28,14 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    container_name: moto-promos-api
+    container_name: geek-promos-api
 
     restart: unless-stopped
 
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-admin123}@postgres:5432/${POSTGRES_DB:-moto_promos}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geek_promos}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       SEARCH_KEYWORDS: ${SEARCH_KEYWORDS:-}

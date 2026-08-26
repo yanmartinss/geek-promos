@@ -1,6 +1,6 @@
-# Moto Promos
+# Geek Promos
 
-Sistema para monitorar promoções de peças de moto em marketplaces como Mercado Livre, Amazon e Shopee.
+Sistema para monitorar promoções de livros e cultura pop (livros, colecionáveis, jogos de tabuleiro/cartas) em marketplaces como Mercado Livre, Amazon e Shopee.
 
 ## Tecnologias
 
@@ -9,7 +9,6 @@ Sistema para monitorar promoções de peças de moto em marketplaces como Mercad
 - TypeScript
 - PostgreSQL
 - Prisma
-- React
 - Playwright
 - Telegram Bot API
 
@@ -29,8 +28,8 @@ Após `pnpm install`, rode `npx playwright install chromium` uma vez em `apps/ap
 - [x] API Express
 - [x] Banco de dados
 - [x] Bot do Telegram
-- [ ] Crawler Mercado Livre
+- [x] Crawler Mercado Livre
 - [ ] Histórico de preços
 - [ ] Dashboard React
-- [ ] Amazon
+- [x] Amazon
 - [ ] Shopee

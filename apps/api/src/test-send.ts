@@ -11,11 +11,11 @@ async function main(): Promise<void> {
     create: {
       externalId,
       store: "MERCADO_LIVRE",
-      title: "Produto de Teste - Promoção Mock",
+      title: "Livro de Teste - Promoção Mock",
       originalPrice: 499.9,
       promotionalPrice: 299.9,
       discountPercent: 40,
-      imageUrl: "https://picsum.photos/seed/moto-promo/800/600",
+      imageUrl: "https://picsum.photos/seed/geek-promo/800/600",
       affiliateUrl: "https://mercadolivre.com.br/teste-promo",
       coupon: "HOJEVALEAPENA",
       paymentMethod: "no PIX",

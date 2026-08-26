@@ -3,14 +3,14 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile.dev
-    container_name: moto-promos-api-dev
+    container_name: geek-promos-api-dev
     restart: unless-stopped
     env_file:
-      - ./apps/api/.env
+      - ./.env
     environment:
       NODE_ENV: development
       PORT: 3000
-      DATABASE_URL: postgresql://postgres:admin123@postgres:5432/moto_promos
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geek_promos}
     volumes:
       - ./apps/api/src:/app/apps/api/src
     ports:

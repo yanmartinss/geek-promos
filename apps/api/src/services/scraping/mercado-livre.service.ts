@@ -4,7 +4,6 @@ import { chromium } from "playwright-extra";
 import { config } from "../../config.js";
 import {
   BLOCK_PAGE_MARKERS,
-  MOTO_KEYWORD_FILTER,
   attrOf,
   chunk,
   computeDiscountPercent,
@@ -150,7 +149,7 @@ async function scrapeKeyword(browser: Browser, keyword: string): Promise<{ offer
         return null;
       });
 
-      if (offer && MOTO_KEYWORD_FILTER.test(offer.title)) {
+      if (offer && config.scraper.titleKeywordFilter.test(offer.title)) {
         offers.push(offer);
       }
     }

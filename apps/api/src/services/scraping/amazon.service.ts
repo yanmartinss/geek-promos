@@ -4,7 +4,6 @@ import { chromium } from "playwright-extra";
 import { config } from "../../config.js";
 import {
   BLOCK_PAGE_MARKERS,
-  MOTO_KEYWORD_FILTER,
   attrOf,
   chunk,
   computeDiscountPercent,
@@ -144,7 +143,7 @@ async function scrapeKeyword(browser: Browser, keyword: string): Promise<{ offer
         return null;
       });
 
-      if (offer && MOTO_KEYWORD_FILTER.test(offer.title)) {
+      if (offer && config.scraper.titleKeywordFilter.test(offer.title)) {
         offers.push(offer);
       }
     }
@@ -216,8 +215,17 @@ function wrapAffiliateLinkFallback(url: string): string {
 }
 
 export function extractExternalId(url: string): string | null {
-  const match = url.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i);
+  const match = url.match(ASIN_PATTERN);
   if (match) return match[1]!.toUpperCase();
+
+  // Links patrocinados (/sspa/click?...&url=%2FProduto%2Fdp%2FASIN%2F...) trazem o ASIN url-encoded
+  // dentro do parâmetro `url` em vez de no path — decodifica pra tentar de novo antes do fallback.
+  try {
+    const decodedMatch = decodeURIComponent(url).match(ASIN_PATTERN);
+    if (decodedMatch) return decodedMatch[1]!.toUpperCase();
+  } catch {
+    // URL malformada pro decodeURIComponent — ignora e cai no fallback abaixo.
+  }
 
   try {
     const parsed = new URL(url);
@@ -226,3 +234,5 @@ export function extractExternalId(url: string): string | null {
     return null;
   }
 }
+
+const ASIN_PATTERN = /\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i;

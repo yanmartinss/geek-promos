@@ -18,6 +18,9 @@ export class TelegramNotifier implements Notifier {
 
     await bot.telegram.sendPhoto(this.channelId, offer.imageUrl, {
       caption: formatTelegramCaption(offer),
+      reply_markup: {
+        inline_keyboard: [[{ text: "🔗 Ver oferta", url: offer.affiliateUrl }]],
+      },
     });
   }
 }
