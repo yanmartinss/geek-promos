@@ -10,10 +10,19 @@ function formatPriceCompact(value: unknown): string {
   });
 }
 
-/** "R$ 2216 no PIX" / "R$ 2216 à vista" — payment method always shown, defaulting to à vista. */
+function formatDiscountPercent(value: unknown): string {
+  return `${Math.round(Number(value))}%`;
+}
+
+/** "De: R$ 89,90" */
+export function formatOriginalPriceLine(offer: Offer): string {
+  return `De: ${formatPriceCompact(offer.originalPrice)}`;
+}
+
+/** "Por: R$ 62,93 no PIX (30% OFF)" — payment method always shown, defaulting to à vista. */
 export function formatPriceLine(offer: Offer): string {
   const paymentMethod = offer.paymentMethod ?? "à vista";
-  return `${formatPriceCompact(offer.promotionalPrice)} ${paymentMethod}`;
+  return `Por: ${formatPriceCompact(offer.promotionalPrice)} ${paymentMethod} (${formatDiscountPercent(offer.discountPercent)} OFF)`;
 }
 
 function buildCaption(offer: Offer, { includeLink }: { includeLink: boolean }): string {
@@ -22,6 +31,8 @@ function buildCaption(offer: Offer, { includeLink }: { includeLink: boolean }): 
   if (offer.isInternational) {
     lines.push("🌍 Produto internacional — entrega mais demorada e pode ter taxação na alfândega", "");
   }
+
+  lines.push(formatOriginalPriceLine(offer));
 
   if (offer.coupon) {
     lines.push(`${formatPriceLine(offer)} com cupom:`, offer.coupon);
