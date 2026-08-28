@@ -25,20 +25,26 @@ export function formatPriceLine(offer: Offer): string {
   return `Por: ${formatPriceCompact(offer.promotionalPrice)} ${paymentMethod} (${formatDiscountPercent(offer.discountPercent)} OFF)`;
 }
 
-function buildCaption(offer: Offer, { includeLink }: { includeLink: boolean }): string {
+function buildCaption(
+  offer: Offer,
+  { includeLink }: { includeLink: boolean },
+): string {
   const lines = [offer.title, ""];
 
   if (offer.isInternational) {
-    lines.push("🌍 Produto internacional — entrega mais demorada e pode ter taxação na alfândega", "");
+    lines.push(
+      "🌍 Produto internacional — entrega mais demorada e pode ter taxação na alfândega",
+      "",
+    );
   }
+
+  lines.push(formatOriginalPriceLine(offer));
 
   if (offer.coupon) {
     lines.push(`${formatPriceLine(offer)} com cupom:`, offer.coupon);
   } else {
     lines.push(formatPriceLine(offer));
   }
-
-  lines.push(formatOriginalPriceLine(offer));
 
   if (includeLink) {
     lines.push("", `🔗 ${offer.affiliateUrl}`);
